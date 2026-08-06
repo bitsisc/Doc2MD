@@ -1,0 +1,13 @@
+# PyInstaller & Build outputs
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+
+# Local sample files / recordings
+*.pdf
+*.mp4
+.codegraph/
