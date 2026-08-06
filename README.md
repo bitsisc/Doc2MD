@@ -8,30 +8,30 @@
 
 | Language | Code | File |
 | :--- | :---: | :--- |
-| **English** | `en` | [README-en.md](README-en.md) |
-| **Ελληνικά (Greek)** | `el` | [README-el.md](README-el.md) |
-| **Deutsch (German)** | `de` | [README-de.md](README-de.md) |
-| **Français (French)** | `fr` | [README-fr.md](README-fr.md) |
-| **Español (Spanish)** | `es` | [README-es.md](README-es.md) |
-| **Italiano (Italian)** | `it` | [README-it.md](README-it.md) |
-| **Português (Portuguese)** | `pt` | [README-pt.md](README-pt.md) |
-| **Nederlands (Dutch)** | `nl` | [README-nl.md](README-nl.md) |
-| **Polski (Polish)** | `pl` | [README-pl.md](README-pl.md) |
-| **Română (Romanian)** | `ro` | [README-ro.md](README-ro.md) |
-| **Svenska (Swedish)** | `sv` | [README-sv.md](README-sv.md) |
-| **Dansk (Danish)** | `da` | [README-da.md](README-da.md) |
-| **Suomi (Finnish)** | `fi` | [README-fi.md](README-fi.md) |
-| **Čeština (Czech)** | `cs` | [README-cs.md](README-cs.md) |
-| **Magyar (Hungarian)** | `hu` | [README-hu.md](README-hu.md) |
-| **Slovenčina (Slovak)** | `sk` | [README-sk.md](README-sk.md) |
-| **Български (Bulgarian)** | `bg` | [README-bg.md](README-bg.md) |
-| **Hrvatski (Croatian)** | `hr` | [README-hr.md](README-hr.md) |
-| **Lietuvių (Lithuanian)** | `lt` | [README-lt.md](README-lt.md) |
-| **Latviešu (Latvian)** | `lv` | [README-lv.md](README-lv.md) |
-| **Eesti (Estonian)** | `et` | [README-et.md](README-et.md) |
-| **Malti (Maltese)** | `mt` | [README-mt.md](README-mt.md) |
-| **Gaeilge (Irish)** | `ga` | [README-ga.md](README-ga.md) |
-| **Slovenščina (Slovenian)** | `sl` | [README-sl.md](README-sl.md) |
+| **English** | `en` | [README-en.md](README/README-en.md) |
+| **Ελληνικά (Greek)** | `el` | [README-el.md](README/README-el.md) |
+| **Deutsch (German)** | `de` | [README-de.md](README/README-de.md) |
+| **Français (French)** | `fr` | [README-fr.md](README/README-fr.md) |
+| **Español (Spanish)** | `es` | [README-es.md](README/README-es.md) |
+| **Italiano (Italian)** | `it` | [README-it.md](README/README-it.md) |
+| **Português (Portuguese)** | `pt` | [README-pt.md](README/README-pt.md) |
+| **Nederlands (Dutch)** | `nl` | [README-nl.md](README/README-nl.md) |
+| **Polski (Polish)** | `pl` | [README-pl.md](README/README-pl.md) |
+| **Română (Romanian)** | `ro` | [README-ro.md](README/README-ro.md) |
+| **Svenska (Swedish)** | `sv` | [README-sv.md](README/README-sv.md) |
+| **Dansk (Danish)** | `da` | [README-da.md](README/README-da.md) |
+| **Suomi (Finnish)** | `fi` | [README-fi.md](README/README-fi.md) |
+| **Čeština (Czech)** | `cs` | [README-cs.md](README/README-cs.md) |
+| **Magyar (Hungarian)** | `hu` | [README-hu.md](README/README-hu.md) |
+| **Slovenčina (Slovak)** | `sk` | [README-sk.md](README/README-sk.md) |
+| **Български (Bulgarian)** | `bg` | [README-bg.md](README/README-bg.md) |
+| **Hrvatski (Croatian)** | `hr` | [README-hr.md](README/README-hr.md) |
+| **Lietuvių (Lithuanian)** | `lt` | [README-lt.md](README/README-lt.md) |
+| **Latviešu (Latvian)** | `lv` | [README-lv.md](README/README-lv.md) |
+| **Eesti (Estonian)** | `et` | [README-et.md](README/README-et.md) |
+| **Malti (Maltese)** | `mt` | [README-mt.md](README/README-mt.md) |
+| **Gaeilge (Irish)** | `ga` | [README-ga.md](README/README-ga.md) |
+| **Slovenščina (Slovenian)** | `sl` | [README-sl.md](README/README-sl.md) |
 
 ---
 
