@@ -179,17 +179,6 @@ def convert_odt_to_md(file_path):
     Converts ODT (OpenDocument Text) to Markdown.
     """
     try:
-        import markitdown
-        md_engine = markitdown.MarkItDown()
-        res = md_engine.convert(file_path)
-        if res and res.text_content:
-            formatted = clean_and_format_markdown_for_llm(res.text_content)
-            if formatted:
-                return formatted
-    except Exception:
-        pass
-
-    try:
         with zipfile.ZipFile(file_path, 'r') as z:
             if 'content.xml' not in z.namelist():
                 raise ValueError("Invalid ODT file: content.xml missing")

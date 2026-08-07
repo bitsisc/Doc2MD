@@ -2,9 +2,18 @@ import os
 import subprocess
 import sys
 
+import shutil
+
 def build():
     print("Building standalone Doc2MD.exe for Windows with collected PyMuPDF & MarkItDown layout resources...")
     
+    # Clean previous build artifacts
+    if os.path.exists("build"):
+        try:
+            shutil.rmtree("build")
+        except Exception:
+            pass
+
     add_data_web = f"web{os.path.pathsep}web"
     add_data_logo = f"Kidmedia-logo.png{os.path.pathsep}."
     add_data_icon = f"app_icon.ico{os.path.pathsep}."
