@@ -7,14 +7,17 @@ def build():
     
     add_data_web = f"web{os.path.pathsep}web"
     add_data_logo = f"Kidmedia-logo.png{os.path.pathsep}."
+    add_data_icon = f"app_icon.ico{os.path.pathsep}."
 
     cmd = [
         sys.executable, "-m", "PyInstaller",
         "--noconsole",
         "--onefile",
         "--name=Doc2MD",
+        "--icon=app_icon.ico",
         f"--add-data={add_data_web}",
         f"--add-data={add_data_logo}",
+        f"--add-data={add_data_icon}",
         "--collect-all=pymupdf",
         "--collect-all=pymupdf_layout",
         "--collect-all=pymupdf4llm",

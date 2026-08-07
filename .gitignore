@@ -12,4 +12,9 @@ __pycache__/
 *.mp4
 .codegraph/
 dev_tools/
+scratch/
+Screenshot*.png
+This-must-be-turned-to-icon.png
+icon_variant_*.png
+
 

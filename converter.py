@@ -135,6 +135,133 @@ def convert_docx_to_md(file_path):
         raise RuntimeError(f"Error converting DOCX: {str(e)}")
 
 
+import zipfile
+import xml.etree.ElementTree as ET
+
+NAMESPACES = {
+    'office': 'urn:oasis:names:tc:opendocument:xmlns:office:1.0',
+    'text': 'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+    'table': 'urn:oasis:names:tc:opendocument:xmlns:table:1.0',
+    'xlink': 'http://www.w3.org/1999/xlink',
+}
+
+def extract_node_text(elem):
+    text_parts = []
+    if elem.text:
+        text_parts.append(elem.text)
+    for child in elem:
+        tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+        if tag == 's':
+            count = int(child.attrib.get(f"{{{NAMESPACES['text']}}}c", 1))
+            text_parts.append(' ' * count)
+        elif tag == 'tab':
+            text_parts.append('\t')
+        elif tag == 'line-break':
+            text_parts.append('\n')
+        elif tag == 'a':
+            link_text = extract_node_text(child)
+            href = child.attrib.get(f"{{{NAMESPACES['xlink']}}}href", '')
+            if href:
+                text_parts.append(f"[{link_text}]({href})")
+            else:
+                text_parts.append(link_text)
+        elif tag == 'span':
+            span_text = extract_node_text(child)
+            text_parts.append(span_text)
+        else:
+            text_parts.append(extract_node_text(child))
+        if child.tail:
+            text_parts.append(child.tail)
+    return "".join(text_parts)
+
+def convert_odt_to_md(file_path):
+    """
+    Converts ODT (OpenDocument Text) to Markdown.
+    """
+    try:
+        import markitdown
+        md_engine = markitdown.MarkItDown()
+        res = md_engine.convert(file_path)
+        if res and res.text_content:
+            formatted = clean_and_format_markdown_for_llm(res.text_content)
+            if formatted:
+                return formatted
+    except Exception:
+        pass
+
+    try:
+        with zipfile.ZipFile(file_path, 'r') as z:
+            if 'content.xml' not in z.namelist():
+                raise ValueError("Invalid ODT file: content.xml missing")
+            xml_bytes = z.read('content.xml')
+        
+        root = ET.fromstring(xml_bytes)
+        body = root.find('.//office:body', NAMESPACES)
+        if body is None:
+            return ""
+        office_text = body.find('.//office:text', NAMESPACES)
+        if office_text is None:
+            return ""
+
+        md_lines = []
+
+        def process_element(elem, list_depth=0):
+            for child in elem:
+                tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+                
+                if tag == 'h':
+                    level = int(child.attrib.get(f"{{{NAMESPACES['text']}}}outline-level", 1))
+                    heading_prefix = '#' * min(max(level, 1), 6)
+                    text = extract_node_text(child).strip()
+                    if text:
+                        md_lines.append(f"{heading_prefix} {text}")
+                        md_lines.append("")
+                        
+                elif tag == 'p':
+                    text = extract_node_text(child).strip()
+                    if text:
+                        if list_depth > 0:
+                            indent = "  " * (list_depth - 1)
+                            md_lines.append(f"{indent}- {text}")
+                        else:
+                            md_lines.append(text)
+                            md_lines.append("")
+                            
+                elif tag == 'list':
+                    process_element(child, list_depth + 1)
+                    if list_depth == 0:
+                        md_lines.append("")
+                        
+                elif tag == 'list-item':
+                    process_element(child, list_depth)
+                    
+                elif tag == 'table':
+                    rows = []
+                    for row in child.findall('.//table:table-row', NAMESPACES):
+                        row_cells = []
+                        for cell in row.findall('.//table:table-cell', NAMESPACES):
+                            cell_text = extract_node_text(cell).replace('\n', ' ').strip()
+                            row_cells.append(cell_text)
+                        if any(row_cells):
+                            rows.append(row_cells)
+                    
+                    if rows:
+                        col_count = max(len(r) for r in rows)
+                        for r in rows:
+                            while len(r) < col_count:
+                                r.append('')
+                        md_lines.append("| " + " | ".join(rows[0]) + " |")
+                        md_lines.append("| " + " | ".join(["---"] * col_count) + " |")
+                        for r in rows[1:]:
+                            md_lines.append("| " + " | ".join(r) + " |")
+                        md_lines.append("")
+
+        process_element(office_text)
+        raw_md = "\n".join(md_lines)
+        return clean_and_format_markdown_for_llm(raw_md)
+    except Exception as e:
+        raise RuntimeError(f"Error converting ODT: {str(e)}")
+
 def convert_document(file_path):
     """
     Unified converter based on file extension.
@@ -142,7 +269,10 @@ def convert_document(file_path):
     ext = os.path.splitext(file_path)[1].lower()
     if ext == '.pdf':
         return convert_pdf_to_md(file_path)
-    elif ext in ['.docx', '.doc', '.odt']:
+    elif ext in ['.docx', '.doc']:
         return convert_docx_to_md(file_path)
+    elif ext == '.odt':
+        return convert_odt_to_md(file_path)
     else:
         raise ValueError(f"Unsupported file format: {ext}")
+
