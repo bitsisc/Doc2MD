@@ -31,6 +31,7 @@ def build():
         "--collect-all=pymupdf_layout",
         "--collect-all=pymupdf4llm",
         "--collect-all=markitdown",
+        "--collect-all=pypandoc",
         "main.py"
     ]
     

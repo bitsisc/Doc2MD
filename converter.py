@@ -176,8 +176,16 @@ def extract_node_text(elem):
 
 def convert_odt_to_md(file_path):
     """
-    Converts ODT (OpenDocument Text) to Markdown.
+    Converts ODT (OpenDocument Text) to Markdown using pypandoc with XML fallback.
     """
+    try:
+        import pypandoc
+        raw_md = pypandoc.convert_file(file_path, 'gfm')
+        if raw_md and len(raw_md.strip()) > 20:
+            return clean_and_format_markdown_for_llm(raw_md)
+    except Exception as e:
+        print("pypandoc failed, falling back to XML parser:", e)
+
     try:
         with zipfile.ZipFile(file_path, 'r') as z:
             if 'content.xml' not in z.namelist():
