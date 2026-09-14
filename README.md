@@ -1,6 +1,8 @@
 # Doc2MD — PDF & Office Document to Markdown Converter
 
-**Doc2MD** is a lightweight desktop GUI application for converting **PDF, DOCX, DOC, and ODT** documents into clean, structured **Markdown (.md)** format designed for optimal performance with Artificial Intelligence models (ChatGPT, Claude, Gemini, DeepSeek, LLMs).
+**Doc2MD** is a lightweight, standalone desktop GUI application for converting **PDF, Scanned PDF (OCR), DOCX, DOC, ODT, and Images (PNG, JPG, BMP, TIFF)** into clean, structured **Markdown (.md)** format designed for optimal performance with Artificial Intelligence models (ChatGPT, Claude, Gemini, DeepSeek, LLMs).
+
+> **Version 1.2.0**: Added automatic **Tesseract OCR** with Greek & English support for scanned PDFs and standalone images. Fully portable and self-contained (zero external dependencies).
 
 ---
 
@@ -37,7 +39,9 @@
 
 ### Features / Χαρακτηριστικά:
 - 🚀 **Drag & Drop** document loading
-- 📄 Supports **PDF, DOCX, DOC, ODT**
+- 📄 Supports **PDF, Scanned PDF, DOCX, DOC, ODT, PNG, JPG, JPEG, BMP, TIFF**
+- 🔍 **Built-in Optical Character Recognition (OCR)** powered by bundled Tesseract (Greek & English)
+- 📦 **100% Standalone & Portable**: No external installations or dependencies required
 - 🌍 Full UI localization in **24 Official EU languages**
 - 🤖 Clean output optimized for LLM token efficiency
 - 💾 Instant preview & direct `.md` file saving

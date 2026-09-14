@@ -13,6 +13,7 @@ __pycache__/
 .codegraph/
 dev_tools/
 scratch/
+tesseract_bin/
 Screenshot*.png
 This-must-be-turned-to-icon.png
 icon_variant_*.png

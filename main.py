@@ -25,7 +25,7 @@ class Api:
 
     def select_file(self):
         window = self.window_holder['window']
-        file_types = ('Document Files (*.pdf;*.docx;*.doc;*.odt)', 'All Files (*.*)')
+        file_types = ('Document Files (*.pdf;*.docx;*.doc;*.odt;*.png;*.jpg;*.jpeg;*.bmp;*.tiff)', 'All Files (*.*)')
         result = window.create_file_dialog(webview.OPEN_DIALOG, allow_multiple=False, file_types=file_types)
         
         if result and len(result) > 0:

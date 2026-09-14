@@ -1,7 +1,145 @@
 import re
 import os
+import sys
+import subprocess
+import shutil
+import tempfile
 import fitz  # PyMuPDF
 import pymupdf4llm
+
+_cached_tess_info = None
+_cached_tess_lang = None
+
+def get_tesseract_info():
+    """
+    Locates Tesseract executable and tessdata directory.
+    Checks bundled Tesseract inside PyInstaller app first, then local project folder, then system installations.
+    Returns (tesseract_exe_path, tessdata_dir_path) or (None, None).
+    """
+    global _cached_tess_info
+    if _cached_tess_info is not None:
+        return _cached_tess_info
+
+    # 1. Bundled inside PyInstaller or running locally in Doc2MD project
+    if getattr(sys, 'frozen', False):
+        base_dir = sys._MEIPASS
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    bundled_exe = os.path.join(base_dir, 'tesseract_bin', 'tesseract.exe')
+    bundled_tessdata = os.path.join(base_dir, 'tesseract_bin', 'tessdata')
+    if os.path.exists(bundled_exe):
+        _cached_tess_info = (bundled_exe, bundled_tessdata if os.path.exists(bundled_tessdata) else None)
+        return _cached_tess_info
+
+    # 2. System installations
+    system_candidates = [
+        r"C:\Program Files\Tesseract-OCR",
+        r"C:\Program Files (x86)\Tesseract-OCR",
+        os.environ.get("TESSERACT_PATH", ""),
+    ]
+    for sc in system_candidates:
+        if sc and os.path.exists(os.path.join(sc, 'tesseract.exe')):
+            exe = os.path.join(sc, 'tesseract.exe')
+            tessdata = os.path.join(sc, 'tessdata')
+            _cached_tess_info = (exe, tessdata if os.path.exists(tessdata) else None)
+            return _cached_tess_info
+
+    which_tess = shutil.which("tesseract")
+    if which_tess:
+        _cached_tess_info = (which_tess, None)
+        return _cached_tess_info
+
+    _cached_tess_info = (None, None)
+    return _cached_tess_info
+
+def get_tesseract_languages(tess_path, tessdata_dir=None):
+    """
+    Detects available languages in Tesseract (prioritizing Greek 'ell' and English 'eng').
+    """
+    global _cached_tess_lang
+    if _cached_tess_lang is not None:
+        return _cached_tess_lang
+    try:
+        flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+        cmd = [tess_path]
+        if tessdata_dir and os.path.exists(tessdata_dir):
+            cmd.extend(["--tessdata-dir", tessdata_dir])
+        cmd.append("--list-langs")
+
+        env = os.environ.copy()
+        tess_dir = os.path.dirname(tess_path)
+        if tess_dir not in env.get("PATH", ""):
+            env["PATH"] = tess_dir + os.pathsep + env.get("PATH", "")
+        if tessdata_dir:
+            env["TESSDATA_PREFIX"] = tessdata_dir
+
+        res = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", creationflags=flags, env=env)
+        langs = res.stdout.lower()
+        has_ell = 'ell' in langs
+        has_eng = 'eng' in langs
+        if has_ell and has_eng:
+            _cached_tess_lang = 'ell+eng'
+        elif has_ell:
+            _cached_tess_lang = 'ell'
+        elif has_eng:
+            _cached_tess_lang = 'eng'
+        else:
+            _cached_tess_lang = 'eng'
+    except Exception:
+        _cached_tess_lang = 'ell+eng'
+    return _cached_tess_lang
+
+def ocr_page_tesseract(page, dpi=300):
+    """
+    Renders a fitz page to a high-res image and extracts text via Tesseract OCR.
+    """
+    tess_path, tessdata_dir = get_tesseract_info()
+    if not tess_path:
+        return ""
+
+    lang = get_tesseract_languages(tess_path, tessdata_dir)
+    tmp_path = None
+    try:
+        pix = page.get_pixmap(dpi=dpi)
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+            tmp_path = tmp.name
+        pix.save(tmp_path)
+
+        flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+        cmd = [tess_path]
+        if tessdata_dir and os.path.exists(tessdata_dir):
+            cmd.extend(["--tessdata-dir", tessdata_dir])
+        cmd.extend([tmp_path, "stdout", "-l", lang])
+
+        env = os.environ.copy()
+        tess_dir = os.path.dirname(tess_path)
+        if tess_dir not in env.get("PATH", ""):
+            env["PATH"] = tess_dir + os.pathsep + env.get("PATH", "")
+        if tessdata_dir:
+            env["TESSDATA_PREFIX"] = tessdata_dir
+
+        res = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=flags,
+            env=env
+        )
+        return res.stdout.strip()
+    except Exception as e:
+        print(f"OCR failed on page: {e}")
+        return ""
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except Exception:
+                pass
+
+
 
 def clean_and_format_markdown_for_llm(md_text):
     """
@@ -60,22 +198,46 @@ def clean_and_format_markdown_for_llm(md_text):
 def convert_pdf_to_md(file_path):
     """
     Converts PDF to rich Markdown formatted for AI (LLM).
+    Automatically detects scanned PDFs and performs Tesseract OCR when needed.
     """
-    try:
-        raw_md = pymupdf4llm.to_markdown(file_path, page_chunks=False, write_images=False)
-        formatted_md = clean_and_format_markdown_for_llm(raw_md)
-        if formatted_md and len(formatted_md) > 50:
-            return formatted_md
-    except Exception as e:
-        print("pymupdf4llm failed, falling back:", e)
-
+    tess_path, _ = get_tesseract_info()
     doc = fitz.open(file_path)
+    total_pages = len(doc)
+
+    # Check if the PDF has selectable digital text or is predominantly scanned
+    sample_pages = min(total_pages, 5)
+    sample_text_count = sum(len(doc[i].get_text().strip()) for i in range(sample_pages))
+    avg_chars_per_page = sample_text_count / max(sample_pages, 1)
+
+    # If document has plenty of digital text, try pymupdf4llm first
+    if avg_chars_per_page >= 25:
+        try:
+            raw_md = pymupdf4llm.to_markdown(file_path, page_chunks=False, write_images=False)
+            formatted_md = clean_and_format_markdown_for_llm(raw_md)
+            if formatted_md and len(formatted_md) > 50:
+                doc.close()
+                return formatted_md
+        except Exception as e:
+            print("pymupdf4llm failed, falling back:", e)
+
+    # Process page by page (fallback or scanned document)
     md_lines = []
 
     for page in doc:
-        blocks = page.get_text("blocks")
-        for b in blocks:
-            text = b[4].strip()
+        page_text = page.get_text().strip()
+
+        # If page has virtually no digital text and Tesseract is available, perform OCR
+        if len(page_text) < 20 and tess_path:
+            ocr_text = ocr_page_tesseract(page)
+            if ocr_text:
+                page_text = ocr_text
+
+        if not page_text:
+            continue
+
+        lines = page_text.split('\n')
+        for line in lines:
+            text = line.strip()
             if not text:
                 continue
 
@@ -98,7 +260,7 @@ def convert_pdf_to_md(file_path):
     doc.close()
     result = "\n\n".join(md_lines)
     result = re.sub(r'\n{3,}', '\n\n', result).strip()
-    return result
+    return clean_and_format_markdown_for_llm(result)
 
 
 def convert_docx_to_md(file_path):
@@ -259,6 +421,43 @@ def convert_odt_to_md(file_path):
     except Exception as e:
         raise RuntimeError(f"Error converting ODT: {str(e)}")
 
+def convert_image_to_md(file_path):
+    """
+    Converts standalone image (PNG, JPG, TIFF, etc.) to Markdown using Tesseract OCR.
+    """
+    tess_path, tessdata_dir = get_tesseract_info()
+    if not tess_path:
+        raise RuntimeError("Tesseract OCR is not installed or not found. Please install Tesseract OCR.")
+
+    lang = get_tesseract_languages(tess_path, tessdata_dir)
+    flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+    cmd = [tess_path]
+    if tessdata_dir and os.path.exists(tessdata_dir):
+        cmd.extend(["--tessdata-dir", tessdata_dir])
+    cmd.extend([file_path, "stdout", "-l", lang])
+
+    env = os.environ.copy()
+    tess_dir = os.path.dirname(tess_path)
+    if tess_dir not in env.get("PATH", ""):
+        env["PATH"] = tess_dir + os.pathsep + env.get("PATH", "")
+    if tessdata_dir:
+        env["TESSDATA_PREFIX"] = tessdata_dir
+
+    res = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        creationflags=flags,
+        env=env
+    )
+    if res.returncode != 0:
+        raise RuntimeError(f"OCR failed: {res.stderr}")
+
+    raw_text = res.stdout.strip()
+    return clean_and_format_markdown_for_llm(raw_text)
+
 def convert_document(file_path):
     """
     Unified converter based on file extension.
@@ -270,6 +469,8 @@ def convert_document(file_path):
         return convert_docx_to_md(file_path)
     elif ext == '.odt':
         return convert_odt_to_md(file_path)
+    elif ext in ['.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.webp']:
+        return convert_image_to_md(file_path)
     else:
         raise ValueError(f"Unsupported file format: {ext}")
 

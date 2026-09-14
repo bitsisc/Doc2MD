@@ -1,24 +1,27 @@
 ### User Guide — Doc2MD
 
-**Doc2MD** converts your documents (PDF, DOCX, DOC, ODT) into clean **Markdown (.md)** format.
+**Doc2MD** converts your documents (**PDF, Scanned PDF with OCR, DOCX, DOC, ODT, and Images PNG/JPG**) into clean, structured **Markdown (.md)** format.
+
+> **New Release v1.2.0**: Integrated automatic **Tesseract OCR (Greek & English)** for scanned PDFs and standalone images. Fully portable and standalone (zero external installations needed)!
 
 #### **Why convert your files to Markdown (.md)?**
 
 PDF and DOCX files contain complex layout structures and formatting overhead that hinder processing by Artificial Intelligence models (ChatGPT, Claude, Gemini, etc.).
 
 * **Optimal AI Understanding:** Markdown strips away layout clutter and retains only the essential structural text (headers, lists, tables) in plain text, enabling AI models to analyze your documents with maximum precision.
+* **Scanned Document OCR:** Automatically extracts text from scanned documents, school worksheets, and photos with high accuracy.
 * **Token Efficiency:** It uses significantly less context memory, allowing you to include much larger documents in your prompts.
 * **Error-Free Text:** Eliminates character corruption and layout formatting artifacts typical of copying and pasting directly from PDFs.
 
 #### **Usage Steps:**
 
-1. **Language Selection (Optional):** Click the globe icon in the top-right corner to select your preferred language interface.
+1. **Language Selection (Optional):** Click the globe icon in the top-right corner to select your preferred language interface (available in all 24 official EU languages).
 2. **Import Document:**
    * Drag & drop your file into the **"Drag & Drop"** area, **or**
-   * Click the **"Choose file (pdf-docx-odt)"** button to browse your file system.
-3. **Automatic Conversion:** The conversion process begins immediately upon file selection.
+   * Click the **"Choose file"** button to browse your file system (.pdf, .docx, .doc, .odt, .png, .jpg, etc.).
+3. **Automatic Conversion & OCR:** The conversion process begins immediately upon file selection. If the PDF is scanned, OCR is automatically applied.
 4. **Preview:** Review the converted Markdown output in the **"Markdown Preview"** modal.
-5. **Save:** Click **"Save As..."** to download the generated `.md` file to your computer (or click "Close" to return to the main dashboard).
+5. **Save:** Click **"Save As..."** to download the generated `.md` file to your computer.
 
 ---
 
